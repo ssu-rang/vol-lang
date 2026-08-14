@@ -1,582 +1,334 @@
 # VOL Syntax
 
-> **Version 0.1 Draft**
-> 이 문서는 현재까지 정의된 VOL의 기본 문법과 의미론을 설명합니다.
-> 아직 초기 설계 단계이므로 구현 과정에서 변경될 수 있습니다.
+이 문서는 VOL(Value-Oriented Language)의 문법과 기본 의미론을 정의합니다.
 
----
+> VOL은 현재 초기 설계 단계이므로 문법은 변경될 수 있습니다.
 
-## 1. Value
+# 1. Value
 
-VOL에서 프로그램이 직접 다루는 모든 것은 **Value**입니다.
+VOL에서 프로그램을 구성하는 기본 단위는 Value입니다.
 
-기본적인 Value는 다음과 같이 표현합니다.
-
-```text
-100
--10
-3.14
-"Hello"
+```vol
+10
+"hello"
 true
-false
 ```
 
-Value에는 Type이 존재합니다.
-
-```text
-100       // Int
-3.14      // Float
-"Hello"   // String
-true      // Bool
-```
-
-서로 호환되지 않는 Type을 언어가 임의로 변환하지 않습니다.
-
-```text
-10 + 20          // 30
-"Hello" + "!"    // "Hello!"
-
-10 + "20"        // TypeError
-```
-
-필요한 Type 변환은 명시적으로 수행합니다.
+함수, Record, 제어 흐름 역시 Value입니다.
 
 ---
 
-## 2. Binding
+# 2. Declaration
 
-`=`을 사용해 Value에 이름을 binding합니다.
+VOL의 기본 선언 문법은 다음과 같습니다.
 
-```text
-hp = 100
-name = "Hero"
-alive = true
+```vol
+name: type = value
 ```
-
-기존 binding의 Value를 사용할 수도 있습니다.
-
-```text
-a = 10
-b = a
-```
-
-`b = a`는 `a`의 Value를 `b`에 독립적으로 binding합니다.
-
-따라서 Record와 같은 mutable Value에서도:
-
-```text
-a = User
-b = a
-
-b.age = 20
-```
-
-`a`는 변경되지 않습니다.
-
-```text
-a.age    // 0
-b.age    // 20
-```
-
-이것은 언어 수준의 **Value Semantics**입니다.
-
-구현체는 이를 효율적으로 구현하기 위해 Copy-on-Write 등의 최적화를 사용할 수 있습니다.
-
----
-
-## 3. Function
-
-Function은 다음과 같이 정의합니다.
-
-```text
-double(x: Int) = x * 2
-```
-
-`fn` 등의 별도 함수 선언 키워드는 사용하지 않습니다.
-
-여러 Expression이 필요한 경우 block을 사용합니다.
-
-```text
-damage(attack: Int) {
-    base = attack * 2
-    bonus = 10
-
-    base + bonus
-}
-```
-
-block의 마지막 Expression이 Function의 결과 Value가 됩니다.
-
-따라서 일반적인 경우 별도의 `return`이 필요하지 않습니다.
-
----
-
-## 4. Function은 Value다
-
-Function 역시 Value이므로 다른 이름에 binding할 수 있습니다.
-
-```text
-double(x: Int) = x * 2
-
-operation = double
-
-result = operation(10)
-```
-
-Function을 다른 Function에 전달할 수도 있습니다.
-
-```text
-apply(value: Int, operation: Function) =
-    operation(value)
-
-result = apply(10, double)
-```
-
-모든 Function Value의 기본 Type은 `Function`입니다.
-
-각 Function의 parameter와 결과 Type은 별도의 **signature**를 가집니다.
 
 예:
 
-```text
-double(x: Int) = x * 2
+```vol
+age: Int = 20
+name: String = "Kim"
+enabled: Bool = true
 ```
 
-의 signature는 개념적으로:
-
-```text
-(Int) -> Int
-```
-
-입니다.
+모든 선언은 가능한 한 이 형태를 따릅니다.
 
 ---
 
-## 5. Function Parameter
+# 3. Assignment
 
-Function parameter에는 Type을 명시합니다.
+이미 존재하는 binding의 값은 다음과 같이 변경합니다.
 
-```text
-add(a: Int, b: Int) = a + b
+```vol
+age = 21
 ```
 
-Function parameter binding은 일반적인 `=` binding과 의미가 다릅니다.
+기본적으로:
 
-```text
+```vol
 b = a
 ```
 
-는 독립적인 Value를 만들지만:
+는 `a`의 Value를 `b`에 대입합니다.
 
-```text
-change(a)
-```
-
-는 Function이 caller의 Value를 직접 다룰 수 있습니다.
-
-따라서 mutable Value를 Function 내부에서 변경하면 caller에서도 변경을 관찰할 수 있습니다.
-
-```text
-birthday(user: User) {
-    user.age = user.age + 1
-}
-
-user = User
-birthday(user)
-
-user.age    // 1
-```
+함수의 parameter binding 역시 동일한 Value 전달 규칙을 따릅니다.
 
 ---
 
-## 6. Record
+# 4. Record
 
-여러 Value를 하나의 구조로 묶으려면 `record`를 사용합니다.
+Record 역시 하나의 타입입니다.
 
-```text
-record User {
+```vol
+User: record = {
     name: String = ""
     age: Int = 0
+    null: Int = 0
 }
 ```
 
-Record는 Class가 아니라 **Value**입니다.
+Record를 위한 별도의 선언 구문은 존재하지 않습니다.
 
-모든 field는 반드시 다음 두 가지를 가져야 합니다.
+일반적인 선언 규칙:
 
-```text
-Type
-초기 Value
+```vol
+name: type = value
 ```
 
-따라서:
+을 그대로 사용합니다.
 
-```text
-record User {
-    name: String
+Record의 필드는 자료형과 기본값을 가져야 합니다.
+
+---
+
+# 5. Null State
+
+VOL에는 별도의 `null` Value가 존재하지 않습니다.
+
+모든 Record는 null 상태를 표현할 수 있어야 합니다.
+
+```vol
+User: record = {
+    name: String = ""
+    age: Int = 0
+    null: Int = 0
 }
 ```
 
-과 같이 초기 Value가 없는 field는 허용되지 않습니다.
+`null`의 의미는 다음과 같습니다.
+
+```text
+null = 0    normal
+null = 1    null
+```
+
+예:
+
+```vol
+user.null = 1
+user.name = "Kim"
+user.age = 20
+```
+
+`name`과 `age`에 값이 존재하더라도 `null = 1`이면 해당 Record는 null 상태로 취급합니다.
+
+null 상태가 다른 필드보다 우선합니다.
 
 ---
 
-## 7. Record 생성
+# 6. Field Access
 
-VOL에는 `new`나 constructor가 없습니다.
+Record의 필드는 `.`으로 접근합니다.
 
-Record 자체가 이미 완전한 Value이므로 일반적인 binding을 사용합니다.
-
-```text
-user = User
-```
-
-이것은 `User` Value를 독립적으로 `user`에 binding합니다.
-
-초기 상태:
-
-```text
-user.name    // ""
-user.age     // 0
-```
-
----
-
-## 8. Field Access
-
-`.`을 사용해 Record의 field에 접근합니다.
-
-```text
+```vol
 user.name
 user.age
 ```
 
-field의 Value를 변경할 수도 있습니다.
+필드의 값은 다음과 같이 변경할 수 있습니다.
 
-```text
+```vol
 user.name = "Kim"
 user.age = 20
 ```
 
-`user.age = 20`은 `user` binding을 교체하는 것이 아니라 **user가 나타내는 Record Value 자체의 mutation**입니다.
+`x.field = value`는 해당 Record Value의 field를 변경합니다.
 
 ---
 
-## 9. Record Null State
+# 7. Function
 
-VOL에는 별도의 `null` Value가 존재하지 않습니다.
+함수도 Value입니다.
 
-대신 **모든 Record는 null state를 가집니다.**
+함수의 타입은 `fn`입니다.
 
-Record 정의에 `null`을 직접 선언할 필요는 없습니다.
-
-```text
-record User {
-    name: String = ""
-    age: Int = 0
-}
-```
-
-모든 `User` Value에는 자동으로:
-
-```text
-null: Bool = false
-```
-
-상태가 존재합니다.
-
-null state는 직접 읽고 변경할 수 있습니다.
-
-```text
-user.null = true
-```
-
-null state를 해제하려면:
-
-```text
-user.null = false
-```
-
-를 사용합니다.
-
-Record가 null state여도 field의 실제 Value는 유지될 수 있습니다.
-
-```text
-user.name = "Kim"
-user.age = 20
-user.null = true
-```
-
-이 상태는 유효합니다.
-
-단, Record를 해석할 때는 **null state가 다른 field보다 우선합니다.**
-
-즉 VOL의 null은:
-
-> Value의 부재가 아니라 Record Value가 가지는 상태입니다.
-
----
-
-## 10. Mutation
-
-VOL의 Value는 필요에 따라 변경될 수 있습니다.
-
-```text
-user.age = 20
-```
-
-이는 Record Value의 mutation입니다.
-
-Function parameter를 통해서도 mutation할 수 있습니다.
-
-```text
-birthday(user: User) {
-    user.age = user.age + 1
-}
-```
-
-```text
-user = User
-
-birthday(user)
-
-user.age    // 1
-```
-
-따라서 VOL의 Function은 반드시 pure하지 않습니다.
-
----
-
-## 11. If Expression
-
-`if`는 Statement가 아니라 Expression입니다.
-
-따라서 결과 Value를 직접 binding할 수 있습니다.
-
-```text
-message = if hp > 0 {
-    "alive"
-} else {
-    "dead"
-}
-```
-
-각 branch의 마지막 Expression이 해당 branch의 결과가 됩니다.
-
-여러 조건도 사용할 수 있습니다.
-
-```text
-message = if hp > 50 {
-    "healthy"
-} else if hp > 20 {
-    "injured"
-} else {
-    "danger"
-}
-```
-
----
-
-## 12. Block Expression
-
-Block 자체도 Value를 생성할 수 있습니다.
-
-```text
-damage = {
-    base = attack * 2
-    bonus = 10
-
-    base + bonus
-}
-```
-
-마지막 Expression:
-
-```text
-base + bonus
-```
-
-의 결과가 전체 block의 결과입니다.
-
-같은 규칙이 Function body에도 적용됩니다.
-
----
-
-## 13. 기본 연산
-
-기본적인 산술 연산:
-
-```text
-a + b
-a - b
-a * b
-a / b
-```
-
-비교 연산:
-
-```text
-a == b
-a != b
-
-a > b
-a < b
-a >= b
-a <= b
-```
-
-Boolean 연산의 정확한 문법은 아직 확정하지 않았습니다.
-
----
-
-## 14. Type Safety
-
-VOL은 Value의 Type을 암묵적으로 변경하지 않습니다.
-
-```text
-10 + "20"
-```
-
-은 오류입니다.
-
-```text
-TypeError
-```
-
-컴파일 시점에 확인할 수 있는 Type 오류는 Value가 생성되기 전에 거부합니다.
-
-명시적인 Type 변환 문법은 추후 정의합니다.
-
----
-
-## 15. 기본 출력
-
-프로토타입에서는 `print`를 기본 Function으로 사용합니다.
-
-```text
-print("Hello, VOL!")
-```
-
-다른 Function과 동일하게 Value를 전달합니다.
-
-```text
-message = "Hello"
-print(message)
-```
-
----
-
-# 종합 예제
-
-```text
-record User {
-    name: String = ""
-    age: Int = 0
-}
-
-is_adult(age: Int) = age >= 18
-
-birthday(user: User) {
-    user.age = user.age + 1
-}
-
-status(user: User) {
-    if user.null {
-        "no user"
-    } else if is_adult(user.age) {
-        "adult"
-    } else {
-        "minor"
-    }
-}
-
-user = User
-
-user.name = "Kim"
-user.age = 17
-
-print(user.name)
-print(status(user))
-
-birthday(user)
-
-print(user.age)
-print(status(user))
-```
-
-개념적인 출력:
-
-```text
-Kim
-minor
-18
-adult
-```
-
----
-
-# 아직 정의하지 않은 문법
-
-다음 기능들은 현재 VOL v0.1 문법으로 확정하지 않았습니다.
-
-* 반복문
-* Collection
-* Generic
-* 사용자 정의 Variant/Sum Type
-* Error handling
-* 명시적 Type conversion 문법
-* 모듈 및 import
-* 접근 제어
-* 비동기 처리
-* 동시성
-* 저수준 메모리 접근
-
-이 기능들은 필요성이 확인된 이후 **기존 VOL의 개념으로 표현할 수 있는지를 먼저 검토한 뒤** 추가합니다.
-
----
-
-# 문법 요약
-
-```text
-// Binding
-x = 10
-
-// Function
-double(x: Int) = x * 2
-
-// Function Value
-operation = double
-
-// Record
-record User {
-    name: String = ""
-    age: Int = 0
-}
-
-// Record binding
-user = User
-
-// Mutation
-user.age = 20
-
-// Null state
-user.null = true
-user.null = false
-
-// If Expression
-message = if user.age >= 18 {
-    "adult"
-} else {
-    "minor"
-}
-
-// Block Expression
-result = {
-    a = 10
-    b = 20
-
+```vol
+add: fn = (a: Int, b: Int) {
     a + b
 }
 ```
 
-이것이 현재 정의된 **VOL v0.1 문법의 핵심 전부**입니다.
+함수 역시 일반적인 선언 형식을 사용합니다.
+
+```vol
+name: type = value
+```
+
+함수 호출:
+
+```vol
+result: Int = add(10, 20)
+```
+
+함수 parameter binding은 일반적인 Value 대입과 동일한 규칙을 사용합니다.
+
+---
+
+# 8. If
+
+조건문 역시 Value입니다.
+
+```vol
+adult: if = (age >= 20) {
+    print("adult")
+}
+```
+
+선언 시점에는 body가 실행되지 않습니다.
+
+```vol
+adult
+```
+
+`adult`가 평가되는 시점에 조건을 평가하고, 조건이 참이면 body를 실행합니다.
+
+따라서 `if` Value는 저장하고 전달할 수 있습니다.
+
+```vol
+check: if = adult
+```
+
+---
+
+# 9. Loop
+
+반복문 역시 Value입니다.
+
+기본적인 숫자 반복은 다음과 같습니다.
+
+```vol
+counter: loop = (0, 10, 1) (i) {
+    print(i)
+}
+```
+
+형식:
+
+```vol
+name: loop = (start, end, step) (variable) {
+    body
+}
+```
+
+각 값은 다음 의미를 가집니다.
+
+- `start`: 시작 값
+- `end`: 종료 값
+- `step`: 증가 또는 감소 간격
+- `variable`: 현재 반복 값을 받을 binding
+
+반복문 역시 선언할 때 실행되지 않습니다.
+
+```vol
+counter
+```
+
+Value가 평가되는 시점에 반복이 실행됩니다.
+
+---
+
+# 10. Break
+
+`break`는 현재 실행 중인 반복을 종료합니다.
+
+```vol
+counter: loop = (0, 10, 1) (i) {
+    stop: if = (i == 5) {
+        break
+    }
+
+    stop
+    print(i)
+}
+
+counter
+```
+
+`break`의 Value 모델과 정확한 의미론은 아직 설계 중입니다.
+
+---
+
+# 11. Evaluation
+
+VOL에서는 Value의 **생성**과 **평가**를 구분합니다.
+
+예:
+
+```vol
+check: if = (age >= 20) {
+    print("adult")
+}
+```
+
+이 코드는 `check`라는 Value를 생성합니다.
+
+이 시점에는 조건문이 실행되지 않습니다.
+
+```vol
+check
+```
+
+`check`가 평가되면 조건과 body가 실행됩니다.
+
+동일한 원칙이 `loop`와 같은 실행 가능한 Value에도 적용됩니다.
+
+---
+
+# 12. Type Error
+
+타입이 맞지 않는 Value는 생성될 수 없습니다.
+
+```vol
+age: Int = "hello"
+```
+
+위 코드는 유효한 `age` Value를 만든 뒤 오류를 발생시키는 것이 아니라, Value 생성 자체가 실패합니다.
+
+타입 오류는 가능한 한 Value가 만들어지기 전에 검출합니다.
+
+---
+
+# 13. Basic Example
+
+```vol
+User: record = {
+    name: String = ""
+    age: Int = 0
+    null: Int = 0
+}
+
+user: User = {
+    name: String = "Rang"
+    age: Int = 20
+    null: Int = 0
+}
+
+greet: fn = (user: User) {
+    print("Hello, " + user.name)
+}
+
+adult: if = (user.age >= 20) {
+    print("adult")
+}
+
+counter: loop = (0, 10, 1) (i) {
+    print(i)
+}
+
+greet(user)
+adult
+counter
+```
+
+# Core Rule
+
+VOL의 문법은 가능한 한 다음 하나의 구조로 설명됩니다.
+
+```vol
+name: type = value
+```
+
+그리고 프로그램의 실행은 Value를 생성하고, 연결하고, 평가하는 과정으로 설명됩니다.
