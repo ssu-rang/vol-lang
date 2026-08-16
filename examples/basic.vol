@@ -1,0 +1,27 @@
+User: record = {
+    name: String = ""
+    age: Int = 0
+    null: Int = 0
+}
+
+user: User = {
+    name: String = "Rang"
+    age: Int = 20
+    null: Int = 0
+}
+
+greet: fn = (user: User) {
+    print("Hello, " + user.name)
+}
+
+adult: if = (user.age >= 20) {
+    print("adult")
+}
+
+counter: loop = (0, 10, 1) (i) {
+    print(i)
+}
+
+greet(user)
+adult
+counter
