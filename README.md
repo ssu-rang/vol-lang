@@ -2,17 +2,17 @@
 
 **Value-Oriented Language**
 
-VOL은 프로그램을 **Value의 생성, 연결, 평가**로 설명하는 것을 목표로 하는 프로그래밍 언어입니다.
+VOL is a programming language that aims to describe programs through the **creation, connection, and evaluation of Values**.
 
-VOL의 핵심 목표는 기능을 줄이는 것이 아니라, 프로그래밍 언어를 구성하는 개념의 수를 줄이는 것입니다.
+VOL's primary goal is not to reduce functionality, but to reduce the number of concepts that make up a programming language.
 
 ## Philosophy
 
-### Everything is a Value
+### Everything Is a Value
 
-VOL에서 가능한 한 모든 것은 Value입니다.
+In VOL, everything is a Value whenever possible.
 
-숫자, 문자열, Bool, Record뿐만 아니라 함수와 제어 흐름도 Value입니다.
+Numbers, strings, Bools, and Records are Values, as are functions and control flow.
 
 ```vol
 age: Int = 20
@@ -37,19 +37,19 @@ counter: loop = (0, 10, 1) (i) {
 }
 ```
 
-`20`, `"VOL"`, 함수, Record, 조건문, 반복문은 모두 Value로 취급됩니다.
+`20`, `"VOL"`, functions, Records, conditionals, and loops are all treated as Values.
 
 ---
 
 ### One Declaration Form
 
-VOL은 가능한 한 모든 선언을 하나의 형태로 표현합니다.
+VOL expresses as many declarations as possible using a single form.
 
 ```vol
 name: type = value
 ```
 
-예를 들어:
+For example:
 
 ```vol
 age: Int = 20
@@ -65,13 +65,13 @@ add: fn = (a: Int, b: Int) {
 }
 ```
 
-변수, Record, 함수마다 별도의 선언 문법을 만드는 대신 같은 구조를 사용합니다.
+Variables, Records, and functions use the same structure instead of having separate declaration syntax.
 
 ---
 
-### Control Flow is a Value
+### Control Flow Is a Value
 
-VOL에서는 제어 흐름도 특별한 문장이 아니라 Value입니다.
+In VOL, control flow is a Value rather than a special kind of statement.
 
 ```vol
 check: if = (age >= 20) {
@@ -79,17 +79,13 @@ check: if = (age >= 20) {
 }
 ```
 
-위 코드는 조건을 즉시 실행하지 않습니다.
-
-`check`라는 `if` Value를 생성합니다.
+This code does not execute the condition immediately. It creates an `if` Value named `check`.
 
 ```vol
 check
 ```
 
-Value가 평가되는 순간 조건이 평가되고 필요한 코드가 실행됩니다.
-
-반복문 역시 동일합니다.
+When the Value is evaluated, the condition is evaluated and the appropriate code is executed. Loops work the same way.
 
 ```vol
 counter: loop = (0, 10, 1) (i) {
@@ -103,7 +99,7 @@ counter
 
 ### Explicit Types, Explicit Defaults
 
-VOL의 값은 자료형과 기본값을 명시적으로 가집니다.
+VOL Values have explicit types and default values.
 
 ```vol
 name: String = ""
@@ -111,7 +107,7 @@ age: Int = 0
 enabled: Bool = false
 ```
 
-Record 역시 모든 필드의 자료형과 기본값을 정의합니다.
+Every field in a Record also defines a type and a default value.
 
 ```vol
 User: record = {
@@ -121,15 +117,13 @@ User: record = {
 }
 ```
 
-이를 통해 값이 존재하는지 알 수 없는 암묵적인 상태를 최소화합니다.
+This minimizes implicit states in which it is unclear whether a value exists.
 
 ---
 
 ### No Built-in Null Value
 
-VOL에는 별도의 `null` 값이 존재하지 않습니다.
-
-대신 Record가 자신의 null 상태를 명시적으로 표현합니다.
+VOL does not have a separate `null` Value. Instead, a Record explicitly represents its own null state.
 
 ```vol
 User: record = {
@@ -139,26 +133,24 @@ User: record = {
 }
 ```
 
-`null = 0`은 정상 상태를, `null = 1`은 null 상태를 의미합니다.
+`null = 0` represents a normal state, while `null = 1` represents a null state.
 
-Record가 null 상태일 때는 다른 필드에 값이 존재하더라도 null 상태가 우선합니다.
+When a Record is in the null state, that state takes precedence even if its other fields contain values.
 
 ---
 
 ## Goal
 
-VOL의 궁극적인 목표는 **적은 수의 개념으로 프로그램 전체를 설명할 수 있는 언어**를 만드는 것입니다.
+VOL's ultimate goal is to create **a language that can describe an entire program with a small number of concepts**.
 
-새로운 기능이 필요할 때마다 새로운 문법과 개념을 추가하는 대신, 기존의 Value 모델로 표현할 수 있는지를 먼저 고려합니다.
+Instead of adding new syntax and concepts whenever a feature is needed, VOL first considers whether the feature can be expressed using the existing Value model.
 
-그 결과 VOL은 배우기 쉽고, 코드를 읽을 때 알아야 하는 암묵적인 규칙이 적으며, 작은 언어 모델 위에서 다양한 프로그램을 표현할 수 있는 언어를 지향합니다.
+As a result, VOL aims to be easy to learn, to have few implicit rules that readers must know, and to express a wide range of programs on top of a small language model.
 
-VOL은 단순히 문법이 짧은 언어를 목표로 하지 않습니다.
-
-**언어 자체를 이해하는 데 필요한 개념의 수가 적은 언어**를 목표로 합니다.
+VOL does not merely aim to have concise syntax. It aims to be **a language that requires few concepts to understand the language itself**.
 
 ## Status
 
-VOL은 현재 초기 설계 및 프로토타이핑 단계입니다.
+VOL is currently in the early design and prototyping stage.
 
-문법과 의미론은 구현 과정에서 변경될 수 있습니다.
+Its syntax and semantics may change during implementation.

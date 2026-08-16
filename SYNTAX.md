@@ -1,12 +1,12 @@
 # VOL Syntax
 
-이 문서는 VOL(Value-Oriented Language)의 문법과 기본 의미론을 정의합니다.
+This document defines the syntax and basic semantics of VOL (Value-Oriented Language).
 
-> VOL은 현재 초기 설계 단계이므로 문법은 변경될 수 있습니다.
+> VOL is currently in the early design stage, so its syntax may change.
 
 # 1. Value
 
-VOL에서 프로그램을 구성하는 기본 단위는 Value입니다.
+The basic unit of a VOL program is a Value.
 
 ```vol
 10
@@ -14,19 +14,19 @@ VOL에서 프로그램을 구성하는 기본 단위는 Value입니다.
 true
 ```
 
-함수, Record, 제어 흐름 역시 Value입니다.
+Functions, Records, and control flow are also Values.
 
 ---
 
 # 2. Declaration
 
-VOL의 기본 선언 문법은 다음과 같습니다.
+The basic declaration syntax in VOL is:
 
 ```vol
 name: type = value
 ```
 
-예:
+Example:
 
 ```vol
 age: Int = 20
@@ -34,33 +34,33 @@ name: String = "Kim"
 enabled: Bool = true
 ```
 
-모든 선언은 가능한 한 이 형태를 따릅니다.
+All declarations follow this form whenever possible.
 
 ---
 
 # 3. Assignment
 
-이미 존재하는 binding의 값은 다음과 같이 변경합니다.
+The value of an existing binding is changed as follows:
 
 ```vol
 age = 21
 ```
 
-기본적으로:
+In general:
 
 ```vol
 b = a
 ```
 
-는 `a`의 Value를 `b`에 대입합니다.
+assigns the Value of `a` to `b`.
 
-함수의 parameter binding 역시 동일한 Value 전달 규칙을 따릅니다.
+Function parameter bindings follow the same Value-passing rules.
 
 ---
 
 # 4. Record
 
-Record 역시 하나의 타입입니다.
+A Record is also a type.
 
 ```vol
 User: record = {
@@ -70,25 +70,23 @@ User: record = {
 }
 ```
 
-Record를 위한 별도의 선언 구문은 존재하지 않습니다.
+There is no separate declaration syntax for Records.
 
-일반적인 선언 규칙:
+The general declaration rule is used as-is:
 
 ```vol
 name: type = value
 ```
 
-을 그대로 사용합니다.
-
-Record의 필드는 자료형과 기본값을 가져야 합니다.
+Record fields must have a type and a default value.
 
 ---
 
 # 5. Null State
 
-VOL에는 별도의 `null` Value가 존재하지 않습니다.
+VOL does not have a separate `null` Value.
 
-모든 Record는 null 상태를 표현할 수 있어야 합니다.
+Every Record must be able to represent a null state.
 
 ```vol
 User: record = {
@@ -98,14 +96,14 @@ User: record = {
 }
 ```
 
-`null`의 의미는 다음과 같습니다.
+The meaning of `null` is:
 
 ```text
 null = 0    normal
 null = 1    null
 ```
 
-예:
+Example:
 
 ```vol
 user.null = 1
@@ -113,37 +111,35 @@ user.name = "Kim"
 user.age = 20
 ```
 
-`name`과 `age`에 값이 존재하더라도 `null = 1`이면 해당 Record는 null 상태로 취급합니다.
+Even when `name` and `age` contain values, the Record is considered null if `null = 1`.
 
-null 상태가 다른 필드보다 우선합니다.
+The null state takes precedence over all other fields.
 
 ---
 
 # 6. Field Access
 
-Record의 필드는 `.`으로 접근합니다.
+Record fields are accessed with `.`.
 
 ```vol
 user.name
 user.age
 ```
 
-필드의 값은 다음과 같이 변경할 수 있습니다.
+Field values can be changed as follows:
 
 ```vol
 user.name = "Kim"
 user.age = 20
 ```
 
-`x.field = value`는 해당 Record Value의 field를 변경합니다.
+`x.field = value` changes a field of the corresponding Record Value.
 
 ---
 
 # 7. Function
 
-함수도 Value입니다.
-
-함수의 타입은 `fn`입니다.
+A function is also a Value. The function type is `fn`.
 
 ```vol
 add: fn = (a: Int, b: Int) {
@@ -151,25 +147,25 @@ add: fn = (a: Int, b: Int) {
 }
 ```
 
-함수 역시 일반적인 선언 형식을 사용합니다.
+Functions use the general declaration form:
 
 ```vol
 name: type = value
 ```
 
-함수 호출:
+Function call:
 
 ```vol
 result: Int = add(10, 20)
 ```
 
-함수 parameter binding은 일반적인 Value 대입과 동일한 규칙을 사용합니다.
+Function parameter bindings use the same rules as ordinary Value assignments.
 
 ---
 
 # 8. If
 
-조건문 역시 Value입니다.
+A conditional is also a Value.
 
 ```vol
 adult: if = (age >= 20) {
@@ -177,15 +173,15 @@ adult: if = (age >= 20) {
 }
 ```
 
-선언 시점에는 body가 실행되지 않습니다.
+The body is not executed when the Value is declared.
 
 ```vol
 adult
 ```
 
-`adult`가 평가되는 시점에 조건을 평가하고, 조건이 참이면 body를 실행합니다.
+When `adult` is evaluated, its condition is evaluated and its body runs if the condition is true.
 
-따라서 `if` Value는 저장하고 전달할 수 있습니다.
+An `if` Value can therefore be stored and passed around.
 
 ```vol
 check: if = adult
@@ -195,9 +191,9 @@ check: if = adult
 
 # 9. Loop
 
-반복문 역시 Value입니다.
+A loop is also a Value.
 
-기본적인 숫자 반복은 다음과 같습니다.
+Basic numeric iteration is written as follows:
 
 ```vol
 counter: loop = (0, 10, 1) (i) {
@@ -205,7 +201,7 @@ counter: loop = (0, 10, 1) (i) {
 }
 ```
 
-형식:
+Form:
 
 ```vol
 name: loop = (start, end, step) (variable) {
@@ -213,26 +209,26 @@ name: loop = (start, end, step) (variable) {
 }
 ```
 
-각 값은 다음 의미를 가집니다.
+Each value has the following meaning:
 
-- `start`: 시작 값
-- `end`: 종료 값
-- `step`: 증가 또는 감소 간격
-- `variable`: 현재 반복 값을 받을 binding
+- `start`: starting value
+- `end`: ending value
+- `step`: increment or decrement interval
+- `variable`: binding that receives the current iteration value
 
-반복문 역시 선언할 때 실행되지 않습니다.
+A loop is not executed when it is declared.
 
 ```vol
 counter
 ```
 
-Value가 평가되는 시점에 반복이 실행됩니다.
+The loop runs when the Value is evaluated.
 
 ---
 
 # 10. Break
 
-`break`는 현재 실행 중인 반복을 종료합니다.
+`break` terminates the currently executing loop.
 
 ```vol
 counter: loop = (0, 10, 1) (i) {
@@ -247,15 +243,15 @@ counter: loop = (0, 10, 1) (i) {
 counter
 ```
 
-`break`의 Value 모델과 정확한 의미론은 아직 설계 중입니다.
+The Value model and exact semantics of `break` are still being designed.
 
 ---
 
 # 11. Evaluation
 
-VOL에서는 Value의 **생성**과 **평가**를 구분합니다.
+VOL distinguishes between **creating** and **evaluating** a Value.
 
-예:
+Example:
 
 ```vol
 check: if = (age >= 20) {
@@ -263,31 +259,31 @@ check: if = (age >= 20) {
 }
 ```
 
-이 코드는 `check`라는 Value를 생성합니다.
+This code creates a Value named `check`.
 
-이 시점에는 조건문이 실행되지 않습니다.
+The conditional is not executed at this point.
 
 ```vol
 check
 ```
 
-`check`가 평가되면 조건과 body가 실행됩니다.
+When `check` is evaluated, its condition and body are executed.
 
-동일한 원칙이 `loop`와 같은 실행 가능한 Value에도 적용됩니다.
+The same principle applies to executable Values such as `loop`.
 
 ---
 
 # 12. Type Error
 
-타입이 맞지 않는 Value는 생성될 수 없습니다.
+A Value with a mismatched type cannot be created.
 
 ```vol
 age: Int = "hello"
 ```
 
-위 코드는 유효한 `age` Value를 만든 뒤 오류를 발생시키는 것이 아니라, Value 생성 자체가 실패합니다.
+This code does not create a valid `age` Value and then raise an error; creation of the Value itself fails.
 
-타입 오류는 가능한 한 Value가 만들어지기 전에 검출합니다.
+Type errors are detected before a Value is created whenever possible.
 
 ---
 
@@ -325,10 +321,10 @@ counter
 
 # Core Rule
 
-VOL의 문법은 가능한 한 다음 하나의 구조로 설명됩니다.
+VOL's syntax is described, whenever possible, by a single structure:
 
 ```vol
 name: type = value
 ```
 
-그리고 프로그램의 실행은 Value를 생성하고, 연결하고, 평가하는 과정으로 설명됩니다.
+Program execution is described as the process of creating, connecting, and evaluating Values.
